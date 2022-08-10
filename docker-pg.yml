@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:11
+    # INSECURE!!! You MUST define your own DB name and credentials
+    environment:
+      # Admin user
+      POSTGRES_USER: ${POSTGRES_USER:-test}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test}
+      POSTGRES_DB: ${POSTGRES_DB:-test}
+
+    # Open the port outside for demonstration purposes only (connections
+    # between containers are performing within isolated networks)
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./init/pg.sql:/docker-entrypoint-initdb.d/init.sql
+
+  acra:
+    image: "cossacklabs/acra-server:${ACRA_DOCKER_IMAGE_TAG:-0.92.0}"
+    # Restart server after correct termination, for example after the config
+    # was changed through the API
+    depends_on:
+      #   - acra-keymaker_server
+      - db
+    ports:
+      - "9393:9393"
+    environment:
+      # INSECURE!!! You MUST define your own ACRA_MASTER_KEY
+      # The default is only for testing purposes
+      ACRA_MASTER_KEY: ${ACRA_MASTER_KEY:-UHZ3VUNNeTJ0SEFhbWVjNkt4eDdVYkc2WnNpUTlYa0E=}
+    volumes:
+      - ./.acrakeys/acra-server:/keys
+      #Directory with configuration, rewriteable
+      - ./acra/configs:/config
+    command: >-
+      --encryptor_config_file=/config/encryptor_config.yaml
+      --poison_detect_enable=true
+      --poison_shutdown_enable=true
+      --keys_dir=/keys
+      --db_host=db
+      --db_port=5432
+      --client_id=acro_demo
