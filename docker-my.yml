@@ -28,10 +28,9 @@ services:
       ACRA_MASTER_KEY: ${ACRA_MASTER_KEY:-UHZ3VUNNeTJ0SEFhbWVjNkt4eDdVYkc2WnNpUTlYa0E=}
     volumes:
       - ./.acrakeys/acra-server:/keys
-      #Directory with configuration, rewriteable
+      # Directory with configuration, rewriteable
       - ./acra/configs:/config
     command: >-
-      --config_file=/config/acra-server-mysql.yaml
       --encryptor_config_file=/config/encryptor_config.yaml
       --poison_detect_enable=true
       --poison_shutdown_enable=true
