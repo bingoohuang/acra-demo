@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -23,6 +24,7 @@ var (
 	usingMysql           = flag.Bool("mysql", false, "use mysql database")
 	createTable          = flag.Bool("create", false, "create table in the database")
 	dropTable            = flag.Bool("drop", false, "Drop current table from the database")
+	insertBind           = flag.Bool("insert_bind", false, "insert values by binding variables")
 	insertRandomValues   = flag.Int("insert", 0, "insert N random values into the database")
 	dbport               = flag.Int("dbport", 9393, "db port")
 	poisonRecordToInsert = flag.String("insert_poison", "", "insert poison record (should be in BASE64 format)")
@@ -91,12 +93,30 @@ func main() {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r := rand.New(s1)
 
+		var ps *sql.Stmt
+		if *insertBind {
+			if *usingMysql {
+				ps, err = db.Prepare(`insert into test_table(username, password, email) values (?,?,?)`)
+			} else {
+				ps, err = db.Prepare(`insert into test_table(username, password, email) values ($1, $2, $3)`)
+			}
+			logFatal(err)
+		}
+
 		for i := 0; i < *insertRandomValues; i++ {
 			userName := getRandomInput(r, usernames)
 			password := getRandomInput(r, passwords)
 			email := getRandomInput(r, emails)
-			_, err := db.Exec(`insert into test_table(username, password, email) values ('` + userName + `', '` + password + `', '` + email + `')`)
+			var result sql.Result
+			if ps != nil {
+				result, err = ps.Exec(userName, password, email)
+			} else {
+				result, err = db.Exec(`insert into test_table(username, password, email) values ('` + userName + `', '` + password + `', '` + email + `')`)
+			}
 			logFatal(err)
+			lastInsertId, _ := result.LastInsertId()
+			rowsAffected, _ := result.RowsAffected()
+			log.Printf("lastInsertId: %d, rowsAffected: %d", lastInsertId, rowsAffected)
 		}
 
 		log.Println("Insert has been successful")
@@ -139,11 +159,17 @@ func main() {
 		log.Println("Select has been successful")
 	}
 
-	if *querySQL != "" {
-		rows, err := db.Query(*querySQL)
-		logFatal(err)
-		scanRows(rows)
-		rows.Close()
+	*querySQL = strings.TrimSpace(*querySQL)
+	upperSQL := strings.ToUpper(*querySQL)
+	if upperSQL != "" {
+		if strings.HasPrefix(upperSQL, "SELECT") {
+			rows, err := db.Query(*querySQL)
+			logFatal(err)
+			scanRows(rows)
+			rows.Close()
+		} else if strings.HasPrefix(upperSQL, "INSERT") || strings.HasPrefix(upperSQL, "UPDATE") {
+
+		}
 	}
 }
 
