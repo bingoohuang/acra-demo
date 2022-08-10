@@ -24,6 +24,22 @@ $ go run demo/demo.go -mysql -select 3
 2022/08/10 14:19:22 Select has been successful
 ```
 
+```sh
+$ go run demo/demo.go -mysql -query "select DISTINCT email from test_table" -dbport 13306
+email
+---
+JSUlsQAAAAAAAADwIiIiIqEAAAAAAAAAAKA2AEwAAAEBQAwAAAAQAAAAIAAAAK7-S5f0DDEuI602j5P22OdPzEB2uw1LnEjnA31QQjrMW-amN8n53pZ_AXr9FEUGkgh2q4qRCiZ1AZKy9AABAUAMAAAAEAAAABsAAADQnOTCjskvZUx01fBFrigQBlG1SsV-H0LAygfxr8-nCclnzusYWfi6wk171dokh9xmrCB7WYDD
+JSUltAAAAAAAAADwIiIiIqQAAAAAAAAAAKA2AEwAAAEBQAwAAAAQAAAAIAAAAB-Ne9xa5gPji1ILQCSCpl7vH5A_7CzvvzH48HRGfr8HOD7O0l8nR3Tjx0zxOR-6BfsrfXeVN1G88Gta7gABAUAMAAAAEAAAAB4AAAAzI754L1FC1IWoL2cY7sBT224poqigkeeaqQwSs9W-04aCqvrKEUMVF1pGn6lx_gGkZgoIOYXzwpHa
+JSUlsgAAAAAAAADwIiIiIqIAAAAAAAAAAKA2AEwAAAEBQAwAAAAQAAAAIAAAAHhTakXdsxIz3hxiNNb04wPDI0ZmUq5X1UNfNMjfnZ4q-6VAZ01jDvEX8H9g4ZIi32CbDBwTvtPxhAqfZwABAUAMAAAAEAAAABwAAADfDHDFdqzSySH2uZybGz4DV4oWbOlYj3BtIMz4rek4I42FOBfRFRywxVwgCATyNV3Mwb6i4b4uMQ==
+$ go run demo/demo.go -mysql -query "select DISTINCT email from test_table"
+email
+---
+kyocxhgif@uqbdjx.tmsouz.com
+oagbiufjxl@icjgsy.dcyygujs.org
+oqmzku@sqaxszyji.mzpyneh.com
+oqmzku@sqaxszyji.mzpyneh.com
+```
+
 logs for the query data through database directly:
 
 ```sh

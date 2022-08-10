@@ -27,6 +27,7 @@ var (
 	dbport               = flag.Int("dbport", 9393, "db port")
 	poisonRecordToInsert = flag.String("insert_poison", "", "insert poison record (should be in BASE64 format)")
 	selectAllFromTable   = flag.Int("select", 0, "select all stored values from database")
+	querySQL             = flag.String("query", "", "query SQL")
 	selectByID           = flag.String("id", "", "select by id")
 )
 
@@ -120,23 +121,79 @@ func main() {
 		}
 		rows, err := db.Query(q)
 		logFatal(err)
-		type Row struct {
-			id       int
-			username []byte
-			password []byte
-			email    []byte
-		}
+
+		cols, err := rows.Columns()
+		logFatal(err)
+
+		printRowsHeader(cols)
+
 		for rows.Next() {
-			var r Row
-			err := rows.Scan(&r.id, &r.username, &r.password, &r.email)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("%d\t%s\t%s\t%s\n", r.id, tryString(r.username), tryString(r.password), tryString(r.email))
+			var id int
+			var username, password, email []byte
+			err := rows.Scan(&id, &username, &password, &email)
+			logFatal(err)
+			fmt.Printf("%d\t%s\t%s\t%s\n", id, tryString(username), tryString(password), tryString(email))
 		}
 		rows.Close()
 
 		log.Println("Select has been successful")
+	}
+
+	if *querySQL != "" {
+		rows, err := db.Query(*querySQL)
+		logFatal(err)
+		scanRows(rows)
+		rows.Close()
+	}
+}
+
+func printRowsHeader(cols []string) {
+	for i, r := range cols {
+		if i > 0 {
+			fmt.Print("\t")
+		}
+		fmt.Printf(r)
+	}
+	fmt.Println()
+
+	for i := range cols {
+		if i > 0 {
+			fmt.Print("\t")
+		}
+		fmt.Printf("---")
+	}
+	fmt.Println()
+}
+
+func scanRows(rows *sql.Rows) {
+	cols, err := rows.Columns()
+	logFatal(err)
+
+	printRowsHeader(cols)
+
+	// Result is your slice string.
+	result := make([]sql.NullString, len(cols))
+
+	dest := make([]interface{}, len(cols)) // A temporary interface{} slice
+	for i := range result {
+		dest[i] = &result[i] // Put pointers to each string in the interface slice
+	}
+
+	for rows.Next() {
+		err := rows.Scan(dest...)
+		logFatal(err)
+
+		for i, r := range result {
+			if i > 0 {
+				fmt.Print("\t")
+			}
+			if r.Valid {
+				fmt.Printf(tryString([]byte(r.String)))
+			} else {
+				fmt.Printf("<NULL>")
+			}
+		}
+		fmt.Println()
 	}
 }
 
