@@ -3,7 +3,7 @@
 1. create key store for the acra-server: `docker-compose -f docker-infrastructure.yml up acra-keymaker_server`
 2. start the database and the acra-server
    - for PostgreSQL: `docker-compose -f docker-pg.yml up`
-   - for MySQL: `docker-compose -f docker-pg.yml up`
+   - for MySQL: `docker-compose -f docker-my.yml up`
 3. insert data and query
    - for PostgreSQL
        - insert data through acra-server `go run demo/demo.go -insert 3`
